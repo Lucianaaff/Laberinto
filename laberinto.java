@@ -9,7 +9,7 @@ class Form extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
-
+//Posibles estados de cada casilla
 enum estado {
     VACIO,
     OBSTACULO,
