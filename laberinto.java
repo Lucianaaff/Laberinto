@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.util.*;
 
 class Form extends JFrame {
     Form(String titulo, int w, int h) {
@@ -9,20 +10,33 @@ class Form extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
+
 //Posibles estados de cada casilla
-enum estado {
+enum Estado {
     VACIO,
     OBSTACULO,
     ENTRADA,
-    SALIDA
+    SALIDA,
+    VISITADO
 };
+
+class Casilla {
+	int x, y;
+	
+	Casilla(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+}
 
 class Panel extends JPanel {
     private int w, h, fila, columna;
     private boolean entrada, salida;
     private final int columnas = 16;
     private final int filas    = columnas;
-    private final estado cuadricula[][] = new estado[columnas][filas];
+    public Casilla inicio = null;
+    public Casilla fin = null;
+    public final Estado cuadricula[][] = new Estado[columnas][filas];
 
     Panel() {
         super();
@@ -31,7 +45,7 @@ class Panel extends JPanel {
         // Hacer que la cuadrilla esté en estado vacío al inicio.
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
-                cuadricula[i][j] = estado.VACIO;
+                cuadricula[i][j] = Estado.VACIO;
             }
         }
         entrada = salida = false;
@@ -49,10 +63,18 @@ class Panel extends JPanel {
         limpiar(g);
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
-                g.setColor(new Color(50, 205, 255));
-                if (cuadricula[i][j] == estado.OBSTACULO) {
+                if (cuadricula[i][j] == Estado.OBSTACULO) {
+                	g.setColor(new Color(50, 205, 255));
                     g.fillRect((columna * i) + 1, (fila * j) + 1,
                                columna - 1, fila - 1);
+                } else if (cuadricula[i][j] == Estado.SALIDA) {
+                	g.setColor(Color.green);
+                	g.fillRect((columna * i) + 1, (fila * j) + 1,
+                				columna - 1, fila - 1);
+                } else if (cuadricula[i][j] == Estado.ENTRADA) {
+                	g.setColor(Color.red);
+                	g.fillRect((columna * i) + 1, (fila * j) + 1,
+                				columna - 1, fila - 1);
                 }
             }
         }
@@ -63,13 +85,13 @@ class Panel extends JPanel {
         int i;
 
         for (i = 0; i < columnas; i++) {
-            cuadricula[i][0] = estado.OBSTACULO;
-            cuadricula[i][filas-1] = estado.OBSTACULO;
+            cuadricula[i][0] = Estado.OBSTACULO;
+            cuadricula[i][filas-1] = Estado.OBSTACULO;
         }
 
         for (i = 0; i < filas; i++) {
-            cuadricula[0][i] = estado.OBSTACULO;
-            cuadricula[columnas-1][i] = estado.OBSTACULO;
+            cuadricula[0][i] = Estado.OBSTACULO;
+            cuadricula[columnas-1][i] = Estado.OBSTACULO;
         }
     }
 
@@ -114,19 +136,53 @@ class Panel extends JPanel {
 
         // Cuando se haga clic izquierdo.
         if (SwingUtilities.isLeftMouseButton(ev)) {
-            cuadricula[c][f] = estado.OBSTACULO;
+        	if (cuadricula[c][f] == Estado.OBSTACULO && !es_borde(c,f)) {
+        		cuadricula[c][f] = Estado.VACIO;
+        	} else if (es_borde(c, f)) {
+        		if (cuadricula[c][f] == Estado.OBSTACULO && !entrada) {
+        			cuadricula[c][f] = Estado.ENTRADA;
+        			inicio = new Casilla(c, f);
+        			entrada = true;
+        		} else if (cuadricula[c][f] == Estado.ENTRADA) {
+        			cuadricula[c][f] = Estado.OBSTACULO;
+        			inicio = null;
+        			entrada = false;
+        		}
+        	} else {
+        		cuadricula[c][f] = Estado.OBSTACULO;
+        	}
+        	
+        	if (inicio != null) 
+        		System.out.println("x = " + inicio.x + ", y = " + inicio.y);
+        		
             repaint();
         }
 
         // Cuando se haga clic derecho.
         if (SwingUtilities.isRightMouseButton(ev)) {
-            cuadricula[c][f] = estado.VACIO;
+            if (es_borde(c, f)) {
+            	if (cuadricula[c][f] == Estado.OBSTACULO) {
+            		cuadricula[c][f] = Estado.SALIDA;
+            		fin = new Casilla(c, f);
+            	} else {
+            		cuadricula[c][f] = Estado.OBSTACULO;
+            		fin = null;
+            	}
+            }
+            System.out.println(salida);
             repaint();
         }
     }
 }
 
 class Laberinto {
+	private LinkedList<Casilla> caminos = new LinkedList<Casilla>();
+	
+	private void solucionar(Estado cuadricula[][], Casilla casilla) {
+		if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
+			JOptionPane.showMessageDialog(null, "GANASTEEEEEE");
+		}
+	}
     public static void main(String[] args) {
         // Dimensión del formulario.
         final int w = 600;
@@ -157,12 +213,12 @@ class Laberinto {
         f.setJMenuBar(menubar);
 
         // Creación del panel.
-        Panel panel = new Panel();
+        final Panel panel = new Panel();
         f.add(panel);
 
         // Eventos.
         MouseListener panel_mouse = new MouseAdapter() {
-                public void mousePressed(MouseEvent ev) {
+              public void mousePressed(MouseEvent ev) {
                     panel.clicked(ev);
                 }
             };
