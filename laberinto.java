@@ -21,12 +21,12 @@ enum Estado {
 };
 
 class Casilla {
-	int x, y;
-	
-	Casilla(int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
+    int x, y;
+
+    Casilla(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
 }
 
 class Panel extends JPanel {
@@ -64,17 +64,17 @@ class Panel extends JPanel {
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
                 if (cuadricula[i][j] == Estado.OBSTACULO) {
-                	g.setColor(new Color(50, 205, 255));
+                    g.setColor(new Color(50, 205, 255));
                     g.fillRect((columna * i) + 1, (fila * j) + 1,
-                               columna - 1, fila - 1);
+                                columna - 1, fila - 1);
                 } else if (cuadricula[i][j] == Estado.SALIDA) {
-                	g.setColor(Color.green);
-                	g.fillRect((columna * i) + 1, (fila * j) + 1,
-                				columna - 1, fila - 1);
+                    g.setColor(Color.green);
+                    g.fillRect((columna * i) + 1, (fila * j) + 1,
+                                columna - 1, fila - 1);
                 } else if (cuadricula[i][j] == Estado.ENTRADA) {
-                	g.setColor(Color.red);
-                	g.fillRect((columna * i) + 1, (fila * j) + 1,
-                				columna - 1, fila - 1);
+                    g.setColor(Color.red);
+                    g.fillRect((columna * i) + 1, (fila * j) + 1,
+                                columna - 1, fila - 1);
                 }
             }
         }
@@ -136,38 +136,38 @@ class Panel extends JPanel {
 
         // Cuando se haga clic izquierdo.
         if (SwingUtilities.isLeftMouseButton(ev)) {
-        	if (cuadricula[c][f] == Estado.OBSTACULO && !es_borde(c,f)) {
-        		cuadricula[c][f] = Estado.VACIO;
-        	} else if (es_borde(c, f)) {
-        		if (cuadricula[c][f] == Estado.OBSTACULO && !entrada) {
-        			cuadricula[c][f] = Estado.ENTRADA;
-        			inicio = new Casilla(c, f);
-        			entrada = true;
-        		} else if (cuadricula[c][f] == Estado.ENTRADA) {
-        			cuadricula[c][f] = Estado.OBSTACULO;
-        			inicio = null;
-        			entrada = false;
-        		}
-        	} else {
-        		cuadricula[c][f] = Estado.OBSTACULO;
-        	}
-        	
-        	if (inicio != null) 
-        		System.out.println("x = " + inicio.x + ", y = " + inicio.y);
-        		
+            if (cuadricula[c][f] == Estado.OBSTACULO && !es_borde(c,f)) {
+                cuadricula[c][f] = Estado.VACIO;
+            } else if (es_borde(c, f)) {
+                if (cuadricula[c][f] == Estado.OBSTACULO && !entrada) {
+                    cuadricula[c][f] = Estado.ENTRADA;
+                    inicio = new Casilla(c, f);
+                    entrada = true;
+                } else if (cuadricula[c][f] == Estado.ENTRADA) {
+                    cuadricula[c][f] = Estado.OBSTACULO;
+                    inicio = null;
+                    entrada = false;
+                }
+            } else {
+                cuadricula[c][f] = Estado.OBSTACULO;
+            }
+
+            if (inicio != null)
+                System.out.println("x = " + inicio.x + ", y = " + inicio.y);
+
             repaint();
         }
 
         // Cuando se haga clic derecho.
         if (SwingUtilities.isRightMouseButton(ev)) {
             if (es_borde(c, f)) {
-            	if (cuadricula[c][f] == Estado.OBSTACULO) {
-            		cuadricula[c][f] = Estado.SALIDA;
-            		fin = new Casilla(c, f);
-            	} else {
-            		cuadricula[c][f] = Estado.OBSTACULO;
-            		fin = null;
-            	}
+                if (cuadricula[c][f] == Estado.OBSTACULO) {
+                    cuadricula[c][f] = Estado.SALIDA;
+                    fin = new Casilla(c, f);
+                } else {
+                    cuadricula[c][f] = Estado.OBSTACULO;
+                    fin = null;
+                }
             }
             System.out.println(salida);
             repaint();
@@ -176,13 +176,14 @@ class Panel extends JPanel {
 }
 
 class Laberinto {
-	private LinkedList<Casilla> caminos = new LinkedList<Casilla>();
-	
-	private void solucionar(Estado cuadricula[][], Casilla casilla) {
-		if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
-			JOptionPane.showMessageDialog(null, "GANASTEEEEEE");
-		}
-	}
+    private LinkedList<Casilla> caminos = new LinkedList<Casilla>();
+
+    private void solucionar(Estado cuadricula[][], Casilla casilla) {
+        if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
+            JOptionPane.showMessageDialog(null, "GANASTEEEEEE");
+        }
+    }
+
     public static void main(String[] args) {
         // Dimensión del formulario.
         final int w = 600;
