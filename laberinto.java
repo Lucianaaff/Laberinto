@@ -34,6 +34,7 @@ class Panel extends JPanel {
     private int w, h, fila, columna;
     private final int columnas = 16;
     private final int filas    = columnas;
+    private Casilla actual;
 
     // Atributos públicos.
     public Casilla inicio;
@@ -52,6 +53,7 @@ class Panel extends JPanel {
         }
 
         inicio = fin = null;
+        actual = new Casilla(-1, -1);
         bordes();
     }
 
@@ -144,6 +146,13 @@ class Panel extends JPanel {
             return;
         }
 
+        if (actual.x == c && actual.y == f) {
+            return;
+        }
+
+        actual.x = c;
+        actual.y = f;
+
         // Cuando se haga clic izquierdo.
         if (SwingUtilities.isLeftMouseButton(ev)) {
             if (cuadricula[c][f] == Estado.OBSTACULO && !es_borde(c,f)) {
@@ -192,6 +201,7 @@ class Panel extends JPanel {
             }
             repaint();
         }
+
     }
 }
 
@@ -203,7 +213,7 @@ class Laberinto {
             JOptionPane.showMessageDialog(null, "¡Has llegado a la salida!");
         }
 
-	return false;
+        return false;
     }
 
     public static void main(String[] args) {
@@ -240,14 +250,17 @@ class Laberinto {
         f.add(panel);
 
         // Eventos.
-        MouseListener panel_mouse = new MouseAdapter() {
-              public void mousePressed(MouseEvent ev) {
-                    panel.clicked(ev);
-                }
-            };
+        panel.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent ev) {
+                panel.clicked(ev);
+            }
+        });
 
-        // Agregar evento al panel principal.
-        panel.addMouseListener(panel_mouse);
+        panel.addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent ev) {
+                panel.clicked(ev);
+            }
+        });
 
         // Mostrar el formulario.
         f.setVisible(true);
