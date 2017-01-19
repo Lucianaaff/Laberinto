@@ -30,12 +30,14 @@ class Casilla {
 }
 
 class Panel extends JPanel {
+    // Atributos privados.
     private int w, h, fila, columna;
-    private boolean entrada, salida;
     private final int columnas = 16;
     private final int filas    = columnas;
-    public Casilla inicio = null;
-    public Casilla fin = null;
+
+    // Atributos públicos.
+    public Casilla inicio;
+    public Casilla fin;
     public final Estado cuadricula[][] = new Estado[columnas][filas];
 
     Panel() {
@@ -48,7 +50,8 @@ class Panel extends JPanel {
                 cuadricula[i][j] = Estado.VACIO;
             }
         }
-        entrada = salida = false;
+
+        inicio = fin = null;
         bordes();
     }
 
@@ -63,17 +66,23 @@ class Panel extends JPanel {
         limpiar(g);
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
+                // Dibujar los obstáculos.
                 if (cuadricula[i][j] == Estado.OBSTACULO) {
                     g.setColor(new Color(50, 205, 255));
                     g.fillRect((columna * i) + 1, (fila * j) + 1,
                                 columna - 1, fila - 1);
-                } else if (cuadricula[i][j] == Estado.SALIDA) {
-                    g.setColor(Color.green);
-                    g.fillRect((columna * i) + 1, (fila * j) + 1,
-                                columna - 1, fila - 1);
-                } else if (cuadricula[i][j] == Estado.ENTRADA) {
+                }
+
+                // Dibujar el inicio.
+                if (inicio != null) {
                     g.setColor(Color.red);
-                    g.fillRect((columna * i) + 1, (fila * j) + 1,
+                    g.fillRect((columna * inicio.x) + 1, (fila * inicio.y) + 1,
+                                columna - 1, fila - 1);
+                }
+
+                if (fin != null) {
+                    g.setColor(Color.green);
+                    g.fillRect((columna * fin.x) + 1, (fila * fin.y) + 1,
                                 columna - 1, fila - 1);
                 }
             }
@@ -117,6 +126,7 @@ class Panel extends JPanel {
                            columna - 1, fila - 1);
             }
         }
+        bordes();
     }
 
     // Función que es llamada cuando el evento `click` es llamado.
@@ -139,21 +149,24 @@ class Panel extends JPanel {
             if (cuadricula[c][f] == Estado.OBSTACULO && !es_borde(c,f)) {
                 cuadricula[c][f] = Estado.VACIO;
             } else if (es_borde(c, f)) {
-                if (cuadricula[c][f] == Estado.OBSTACULO && !entrada) {
+                if (cuadricula[c][f] == Estado.OBSTACULO) {
                     cuadricula[c][f] = Estado.ENTRADA;
                     inicio = new Casilla(c, f);
-                    entrada = true;
+
+                    // Si la entrada es igual que la salida:
+                    // reemplazar por la entrada.
+                    if (fin != null) {
+                        if (inicio.x == fin.x && inicio.y == fin.y) {
+                            fin = null;
+                        }
+                    }
                 } else if (cuadricula[c][f] == Estado.ENTRADA) {
                     cuadricula[c][f] = Estado.OBSTACULO;
                     inicio = null;
-                    entrada = false;
                 }
             } else {
                 cuadricula[c][f] = Estado.OBSTACULO;
             }
-
-            if (inicio != null)
-                System.out.println("x = " + inicio.x + ", y = " + inicio.y);
 
             repaint();
         }
@@ -164,12 +177,19 @@ class Panel extends JPanel {
                 if (cuadricula[c][f] == Estado.OBSTACULO) {
                     cuadricula[c][f] = Estado.SALIDA;
                     fin = new Casilla(c, f);
+
+                    // Si la salida es igual que la entrada:
+                    // reemplazar por la salida.
+                    if (inicio != null) {
+                        if (fin.x == inicio.x && fin.y == inicio.y) {
+                            inicio = null;
+                        }
+                    }
                 } else {
                     cuadricula[c][f] = Estado.OBSTACULO;
                     fin = null;
                 }
             }
-            System.out.println(salida);
             repaint();
         }
     }
@@ -178,16 +198,16 @@ class Panel extends JPanel {
 class Laberinto {
     private LinkedList<Casilla> caminos = new LinkedList<Casilla>();
 
-    private void solucionar(Estado cuadricula[][], Casilla casilla) {
+    private boolean solucionar(Estado cuadricula[][], Casilla casilla) {
         if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
-            JOptionPane.showMessageDialog(null, "GANASTEEEEEE");
+            JOptionPane.showMessageDialog(null, "¡Has llegado a la salida!");
         }
     }
 
     public static void main(String[] args) {
         // Dimensión del formulario.
         final int w = 600;
-        final int h = 600;
+        final int h = 620; // El excedente es para el menú.
 
         // Creación de formulario.
         Form f = new Form("Laberinto", w, h);
