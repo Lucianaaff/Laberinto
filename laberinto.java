@@ -68,7 +68,7 @@ class Panel extends JPanel {
             for (j = 0; j < filas; j++) {
                 // Dibujar los obstáculos.
                 if (cuadricula[i][j] == Estado.OBSTACULO) {
-                    g.setColor(new Color(50, 205, 255));
+                    g.setColor(Color.gray);
                     g.fillRect((columna * i) + 1, (fila * j) + 1,
                                 columna - 1, fila - 1);
                 }
@@ -119,7 +119,7 @@ class Panel extends JPanel {
         int i, j;
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
-                g.setColor(new Color(220, 220, 220));
+                g.setColor(Color.black);
                 g.drawRect(columna * i, fila * j, columna, fila);
                 g.setColor(Color.white);
                 g.fillRect((columna * i) + 1, (fila * j) + 1,
@@ -202,6 +202,8 @@ class Laberinto {
         if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
             JOptionPane.showMessageDialog(null, "¡Has llegado a la salida!");
         }
+
+	return false;
     }
 
     public static void main(String[] args) {
