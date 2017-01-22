@@ -273,8 +273,8 @@ class Panel extends JPanel {
         repaint();
     }
      public void limpiarlabe(){
-        for(int i=0 ; i<12 ; i++){
-            for(int j=0 ; j<12 ; j++){
+        for(int i=0 ; i<columnas; i++){
+            for(int j=0 ; j<filas; j++){
                 if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO || cuadricula[i][j]== Estado.OBSTACULO ){
                         cuadricula[i][j]= Estado.VACIO;
                 }
