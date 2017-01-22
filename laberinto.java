@@ -17,29 +17,47 @@ enum Estado {
     OBSTACULO,
     ENTRADA,
     SALIDA,
-    VISITADO
+    VISITADO,
+    CAMINO
 };
 
 class Casilla {
     int x, y;
+    Casilla pariente;
 
     Casilla(int x, int y) {
         this.x = x;
         this.y = y;
+        this.pariente = null;
+    }
+
+    Casilla(int x, int y, Casilla pariente) {
+        this.x = x;
+        this.y = y;
+        this.pariente = pariente;
+    }
+
+    Casilla pariente() {
+        return this.pariente;
+    }
+
+    void imprimir() {
+        System.out.println("x = " + x + " y = " + y);
     }
 }
 
 class Panel extends JPanel {
     // Atributos privados.
     private int w, h, fila, columna;
-    private final int columnas = 16;
+    private final int columnas = 12;
     private final int filas    = columnas;
     private Casilla actual;
+    private Queue<Casilla> camino;
 
     // Atributos públicos.
     public Casilla inicio;
     public Casilla fin;
-    public final Estado cuadricula[][] = new Estado[columnas][filas];
+    public Estado cuadricula[][] = new Estado[columnas][filas];
 
     Panel() {
         super();
@@ -73,16 +91,15 @@ class Panel extends JPanel {
                     g.setColor(Color.gray);
                     g.fillRect((columna * i) + 1, (fila * j) + 1,
                                 columna - 1, fila - 1);
-                }
-
-                // Dibujar el inicio.
-                if (inicio != null) {
+                } else if (cuadricula[i][j] == Estado.CAMINO) {
+                    g.setColor(Color.yellow);
+                    g.fillRect((columna * i) + 1, (fila * j) + 1,
+                                columna - 1, fila - 1);
+                } else if (cuadricula[i][j] == Estado.ENTRADA) {
                     g.setColor(Color.red);
                     g.fillRect((columna * inicio.x) + 1, (fila * inicio.y) + 1,
                                 columna - 1, fila - 1);
-                }
-
-                if (fin != null) {
+                } else if (cuadricula[i][j] == Estado.SALIDA) {
                     g.setColor(Color.green);
                     g.fillRect((columna * fin.x) + 1, (fila * fin.y) + 1,
                                 columna - 1, fila - 1);
@@ -104,6 +121,11 @@ class Panel extends JPanel {
             cuadricula[0][i] = Estado.OBSTACULO;
             cuadricula[columnas-1][i] = Estado.OBSTACULO;
         }
+
+        if (inicio != null)
+            cuadricula[inicio.x][inicio.y] = Estado.ENTRADA;
+        if (fin != null)
+            cuadricula[fin.x][fin.y] = Estado.SALIDA;
     }
 
     // Función para determinar si la columna y fila es un borde.
@@ -159,7 +181,6 @@ class Panel extends JPanel {
                 cuadricula[c][f] = Estado.VACIO;
             } else if (es_borde(c, f)) {
                 if (cuadricula[c][f] == Estado.OBSTACULO) {
-                    cuadricula[c][f] = Estado.ENTRADA;
                     inicio = new Casilla(c, f);
 
                     // Si la entrada es igual que la salida:
@@ -183,39 +204,81 @@ class Panel extends JPanel {
         // Cuando se haga clic derecho.
         if (SwingUtilities.isRightMouseButton(ev)) {
             if (es_borde(c, f)) {
-                if (cuadricula[c][f] == Estado.OBSTACULO) {
-                    cuadricula[c][f] = Estado.SALIDA;
-                    fin = new Casilla(c, f);
+                fin = new Casilla(c, f);
 
-                    // Si la salida es igual que la entrada:
-                    // reemplazar por la salida.
-                    if (inicio != null) {
-                        if (fin.x == inicio.x && fin.y == inicio.y) {
-                            inicio = null;
-                        }
+                // Si la salida es igual que la entrada:
+                // reemplazar por la salida.
+                if (inicio != null) {
+                    if (fin.x == inicio.x && fin.y == inicio.y) {
+                        inicio = null;
                     }
-                } else {
-                    cuadricula[c][f] = Estado.OBSTACULO;
-                    fin = null;
                 }
             }
             repaint();
         }
 
     }
+
+    public void solucionar() {
+        if (inicio == null && fin == null) {
+            return;
+        }
+
+        camino = new LinkedList<>();
+
+        camino.add(inicio);
+
+        Casilla tmp = null;
+        while (!camino.isEmpty()) {
+            tmp = camino.remove();
+
+            if (cuadricula[tmp.x][tmp.y] == Estado.SALIDA) {
+                System.out.println("Salida");
+                break;
+            }
+
+            cuadricula[tmp.x][tmp.y] = Estado.VISITADO;
+            if (es_valido(tmp.x+1, tmp.y)) {
+                camino.add(new Casilla(tmp.x+1, tmp.y, tmp));
+                System.out.println("derecha");
+            }
+
+            if (es_valido(tmp.x-1, tmp.y)) {
+                camino.add(new Casilla(tmp.x-1, tmp.y, tmp));
+                System.out.println("izquierda");
+            }
+
+            if (es_valido(tmp.x, tmp.y+1)) {
+                camino.add(new Casilla(tmp.x, tmp.y+1, tmp));
+                System.out.println("abajo");
+            }
+
+            if (es_valido(tmp.x, tmp.y-1)) {
+                camino.add(new Casilla(tmp.x, tmp.y-1, tmp));
+                System.out.println("arriba");
+            }
+        }
+
+        while (tmp.pariente() != null) {
+            cuadricula[tmp.x][tmp.y] = Estado.CAMINO;
+            tmp = tmp.pariente();
+        }
+        repaint();
+    }
+
+    private boolean es_valido(int x, int y) {
+        if (x < 0 || x >= columnas || y < 0 || y >= filas ||
+                cuadricula[x][y] == Estado.VISITADO ||
+                cuadricula[x][y] == Estado.OBSTACULO ||
+                cuadricula[x][y] == Estado.ENTRADA) {
+            return false;
+        }
+
+        return true;
+    }
 }
 
 class Laberinto {
-    private LinkedList<Casilla> caminos = new LinkedList<Casilla>();
-
-    private boolean solucionar(Estado cuadricula[][], Casilla casilla) {
-        if (cuadricula[casilla.x][casilla.y] == Estado.SALIDA) {
-            JOptionPane.showMessageDialog(null, "¡Has llegado a la salida!");
-        }
-
-        return false;
-    }
-
     public static void main(String[] args) {
         // Dimensión del formulario.
         final int w = 600;
@@ -259,6 +322,12 @@ class Laberinto {
         panel.addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent ev) {
                 panel.clicked(ev);
+            }
+        });
+
+        correr_menu_item.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent ev) {
+                panel.solucionar();
             }
         });
 
