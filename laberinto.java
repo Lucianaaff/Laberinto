@@ -216,7 +216,7 @@ class Panel extends JPanel {
             }
             repaint();
         }
-        
+
     }
 
     public void solucionar() {
@@ -233,29 +233,24 @@ class Panel extends JPanel {
             tmp = camino.remove();
 
             if (cuadricula[tmp.x][tmp.y] == Estado.SALIDA) {
-                System.out.println("Salida");
                 break;
             }
 
             cuadricula[tmp.x][tmp.y] = Estado.VISITADO;
             if (es_valido(tmp.x+1, tmp.y)) {
                 camino.add(new Casilla(tmp.x+1, tmp.y, tmp));
-                System.out.println("derecha");
             }
 
             if (es_valido(tmp.x-1, tmp.y)) {
                 camino.add(new Casilla(tmp.x-1, tmp.y, tmp));
-                System.out.println("izquierda");
             }
 
             if (es_valido(tmp.x, tmp.y+1)) {
                 camino.add(new Casilla(tmp.x, tmp.y+1, tmp));
-                System.out.println("abajo");
             }
 
             if (es_valido(tmp.x, tmp.y-1)) {
                 camino.add(new Casilla(tmp.x, tmp.y-1, tmp));
-                System.out.println("arriba");
             }
         }
 
@@ -265,7 +260,7 @@ class Panel extends JPanel {
         }
         repaint();
     }
-    
+
     public void reiniciar(){
         for(int i=0 ; i<columnas ; i++){
             for(int j=0 ; j<filas ; j++){
@@ -291,7 +286,7 @@ class Panel extends JPanel {
                         cuadricula[i][j]= Estado.OBSTACULO;
                         fin=null;
                 }
-                
+
             }
         }
         bordes();
@@ -341,7 +336,7 @@ class Laberinto {
         laberinto_menu.add(reiniciar_menu_item);
         laberinto_menu.addSeparator();
         laberinto_menu.add(limpiar_menu_item);
-        
+
         menubar.setBackground(Color.white);
 
 
@@ -370,24 +365,24 @@ class Laberinto {
                 panel.solucionar();
             }
         });
-        
+
         reiniciar_menu_item.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent ev) {
                 panel.reiniciar();
             }
          });
-         
+
          limpiar_menu_item.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent ev) {
                 panel.limpiarlabe();
             }
         });
-        
+
         inf_menu_item.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent ev) {
                 JOptionPane.showMessageDialog(null," 1)Hacer click o dejar presionado el raton para colocar los obstaculos \n 2)Presionar el boton derecho para la entrada y el izquierdo para la salida \n 3)Seleccionar correr para que se resuelva el laberinto \n 4)Seleccionar reiniciar para que se recorra nuevamente \n 5) Seleccionar limpiar para comenzar otra vez ");
-  
-               
+
+
              }
          });
 
