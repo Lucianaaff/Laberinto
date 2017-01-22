@@ -216,7 +216,7 @@ class Panel extends JPanel {
             }
             repaint();
         }
-
+        
     }
 
     public void solucionar() {
@@ -265,6 +265,38 @@ class Panel extends JPanel {
         }
         repaint();
     }
+    
+    public void reiniciar(){
+        for(int i=0 ; i<columnas ; i++){
+            for(int j=0 ; j<filas ; j++){
+                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO){
+                        cuadricula[i][j] = Estado.VACIO;
+                }
+            }
+        }
+        bordes();
+        repaint();
+    }
+     public void limpiarlabe(){
+        for(int i=0 ; i<12 ; i++){
+            for(int j=0 ; j<12 ; j++){
+                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO || cuadricula[i][j]== Estado.OBSTACULO ){
+                        cuadricula[i][j]= Estado.VACIO;
+                }
+                 if(cuadricula[i][j]== Estado.ENTRADA){
+                        cuadricula[i][j]= Estado.OBSTACULO;
+                        inicio=null;
+                }
+                if(cuadricula[i][j]==Estado.SALIDA){
+                        cuadricula[i][j]= Estado.OBSTACULO;
+                        fin=null;
+                }
+                
+            }
+        }
+        bordes();
+        repaint();
+    }
 
     private boolean es_valido(int x, int y) {
         if (x < 0 || x >= columnas || y < 0 || y >= filas ||
@@ -294,14 +326,22 @@ class Laberinto {
         JMenu laberinto_menu = new JMenu("Laberinto");
 
         // Creación de cada elemento de los menús.
+        JMenuItem inf_menu_item = new JMenuItem("Instrucciones");
         JMenuItem correr_menu_item = new JMenuItem("Correr");
-        JMenuItem salir_menu_item = new JMenuItem("Salir");
+        JMenuItem reiniciar_menu_item = new JMenuItem("Reiniciar");
+        JMenuItem limpiar_menu_item = new JMenuItem("Limpiar");
+
 
         // Agregar los elementos a los menús y a la barra de menú.
         menubar.add(laberinto_menu);
+        laberinto_menu.add(inf_menu_item);
+        laberinto_menu.addSeparator();
         laberinto_menu.add(correr_menu_item);
         laberinto_menu.addSeparator();
-        laberinto_menu.add(salir_menu_item);
+        laberinto_menu.add(reiniciar_menu_item);
+        laberinto_menu.addSeparator();
+        laberinto_menu.add(limpiar_menu_item);
+        
         menubar.setBackground(Color.white);
 
 
@@ -330,6 +370,26 @@ class Laberinto {
                 panel.solucionar();
             }
         });
+        
+        reiniciar_menu_item.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent ev) {
+                panel.reiniciar();
+            }
+         });
+         
+         limpiar_menu_item.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent ev) {
+                panel.limpiarlabe();
+            }
+        });
+        
+        inf_menu_item.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent ev) {
+                JOptionPane.showMessageDialog(null," 1)Hacer click o dejar presionado el raton para colocar los obstaculos \n 2)Presionar el boton derecho para la entrada y el izquierdo para la salida \n 3)Seleccionar correr para que se resuelva el laberinto \n 4)Seleccionar reiniciar para que se recorra nuevamente \n 5) Seleccionar limpiar para comenzar otra vez ");
+  
+               
+             }
+         });
 
         // Mostrar el formulario.
         f.setVisible(true);
