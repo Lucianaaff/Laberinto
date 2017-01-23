@@ -2,6 +2,10 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.awt.image.BufferedImage;
 
 class Form extends JFrame {
     Form(String titulo, int w, int h) {
@@ -18,7 +22,8 @@ enum Estado {
     ENTRADA,
     SALIDA,
     VISITADO,
-    CAMINO
+    CAMINO,
+    ACTUAL
 };
 
 class Casilla {
@@ -46,23 +51,32 @@ class Casilla {
     }
 }
 
-class Panel extends JPanel {
+class Panel extends JPanel implements Runnable {
     // Atributos privados.
     private int w, h, fila, columna;
     private final int columnas = 12;
     private final int filas    = columnas;
     private Casilla actual;
     private Queue<Casilla> camino;
+    private BufferedImage bloque;
+    private BufferedImage moneda;
+    private BufferedImage castillo;
+    private BufferedImage princesa;
+    private BufferedImage mario;
+    private boolean bloquear; // Bloquear cuando dibuje el camino.
 
     // Atributos públicos.
     public Casilla inicio;
     public Casilla fin;
     public Estado cuadricula[][] = new Estado[columnas][filas];
+    public Thread th;
 
     Panel() {
         super();
         int i, j;
 
+        setOpaque(true);
+        setBackground(Color.black);
         // Hacer que la cuadrilla esté en estado vacío al inicio.
         for (i = 0; i < columnas; i++) {
             for (j = 0; j < filas; j++) {
@@ -70,13 +84,33 @@ class Panel extends JPanel {
             }
         }
 
+        try {
+            bloque = ImageIO.read(new File("bloque.png"));
+            moneda = ImageIO.read(new File("moneda.png"));
+            castillo = ImageIO.read(new File("castillo.png"));
+            princesa = ImageIO.read(new File("princesa.png"));
+            mario = ImageIO.read(new File("mario.png"));
+        } catch (IOException e) {}
+
         inicio = fin = null;
+        bloquear = false;
         actual = new Casilla(-1, -1);
         bordes();
+
+    }
+
+    public void run() {
+        solucionar();
+    }
+
+    public void correr() {
+        th = new Thread(this);
+        th.start();
     }
 
     // Función que es llamada por sí misma para pintar el panel.
     public void paint(Graphics g) {
+        super.paint(g);
         int i, j;
 
         w = getSize().width;
@@ -88,21 +122,18 @@ class Panel extends JPanel {
             for (j = 0; j < filas; j++) {
                 // Dibujar los obstáculos.
                 if (cuadricula[i][j] == Estado.OBSTACULO) {
-                    g.setColor(Color.gray);
-                    g.fillRect((columna * i) + 1, (fila * j) + 1,
-                                columna - 1, fila - 1);
+                    g.drawImage(bloque, columna * i, fila * j, columna, fila, null);
                 } else if (cuadricula[i][j] == Estado.CAMINO) {
-                    g.setColor(Color.yellow);
-                    g.fillRect((columna * i) + 1, (fila * j) + 1,
-                                columna - 1, fila - 1);
+                    g.drawImage(moneda, columna * i, fila * j, columna, fila, null);
                 } else if (cuadricula[i][j] == Estado.ENTRADA) {
-                    g.setColor(Color.red);
-                    g.fillRect((columna * inicio.x) + 1, (fila * inicio.y) + 1,
-                                columna - 1, fila - 1);
+                    if (bloquear)
+                        g.drawImage(castillo, columna * i, fila * j, columna, fila, null);
+                    else
+                        g.drawImage(mario, columna * i, fila * j, columna, fila, null);
                 } else if (cuadricula[i][j] == Estado.SALIDA) {
-                    g.setColor(Color.green);
-                    g.fillRect((columna * fin.x) + 1, (fila * fin.y) + 1,
-                                columna - 1, fila - 1);
+                    g.drawImage(princesa, columna * i, fila * j, columna, fila, null);
+                } else if (cuadricula[i][j] == Estado.ACTUAL) {
+                    g.drawImage(mario, columna * i, fila * j, columna, fila, null);
                 }
             }
         }
@@ -145,7 +176,6 @@ class Panel extends JPanel {
             for (j = 0; j < filas; j++) {
                 g.setColor(Color.black);
                 g.drawRect(columna * i, fila * j, columna, fila);
-                g.setColor(Color.white);
                 g.fillRect((columna * i) + 1, (fila * j) + 1,
                            columna - 1, fila - 1);
             }
@@ -171,6 +201,12 @@ class Panel extends JPanel {
         if (actual.x == c && actual.y == f) {
             return;
         }
+
+        if (bloquear) {
+            return;
+        }
+
+        reiniciar();
 
         actual.x = c;
         actual.y = f;
@@ -224,15 +260,19 @@ class Panel extends JPanel {
             return;
         }
 
-        camino = new LinkedList<>();
+        reiniciar();
 
-        camino.add(inicio);
+        camino = new LinkedList<>();
+        boolean encontrado = false;
+
+        camino.add(fin);
 
         Casilla tmp = null;
         while (!camino.isEmpty()) {
             tmp = camino.remove();
 
-            if (cuadricula[tmp.x][tmp.y] == Estado.SALIDA) {
+            if (cuadricula[tmp.x][tmp.y] == Estado.ENTRADA) {
+                encontrado = true;
                 break;
             }
 
@@ -254,17 +294,32 @@ class Panel extends JPanel {
             }
         }
 
-        while (tmp.pariente() != null) {
-            cuadricula[tmp.x][tmp.y] = Estado.CAMINO;
-            tmp = tmp.pariente();
+        if (!encontrado) {
+            JOptionPane.showMessageDialog(null, "¡Oh, no! Mario no podrá encontrarse con su princesa. \nNo hay camino posible para visitarla.");
+            return;
         }
-        repaint();
+
+        bloquear = true;
+        Casilla anterior = null;
+        while (tmp.pariente() != null) {
+            cuadricula[tmp.x][tmp.y] = Estado.ACTUAL;
+            if (anterior != null) {
+                cuadricula[anterior.x][anterior.y] = Estado.CAMINO;
+            }
+
+            anterior = tmp;
+            tmp = tmp.pariente();
+            repaint();
+            try { Thread.sleep(200); }
+            catch (InterruptedException ex) {}
+        }
+        bloquear = false;
     }
 
     public void reiniciar(){
         for(int i=0 ; i<columnas ; i++){
             for(int j=0 ; j<filas ; j++){
-                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO){
+                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO || cuadricula[i][j] == Estado.ACTUAL) {
                         cuadricula[i][j] = Estado.VACIO;
                 }
             }
@@ -275,7 +330,7 @@ class Panel extends JPanel {
      public void limpiarlabe(){
         for(int i=0 ; i<columnas; i++){
             for(int j=0 ; j<filas; j++){
-                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO || cuadricula[i][j]== Estado.OBSTACULO ){
+                if(cuadricula[i][j]== Estado.CAMINO || cuadricula[i][j]== Estado.VISITADO || cuadricula[i][j]== Estado.OBSTACULO || cuadricula[i][j] == Estado.ACTUAL) {
                         cuadricula[i][j]= Estado.VACIO;
                 }
                  if(cuadricula[i][j]== Estado.ENTRADA){
@@ -296,8 +351,7 @@ class Panel extends JPanel {
     private boolean es_valido(int x, int y) {
         if (x < 0 || x >= columnas || y < 0 || y >= filas ||
                 cuadricula[x][y] == Estado.VISITADO ||
-                cuadricula[x][y] == Estado.OBSTACULO ||
-                cuadricula[x][y] == Estado.ENTRADA) {
+                cuadricula[x][y] == Estado.OBSTACULO) {
             return false;
         }
 
@@ -362,7 +416,7 @@ class Laberinto {
 
         correr_menu_item.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent ev) {
-                panel.solucionar();
+                panel.correr();
             }
         });
 
